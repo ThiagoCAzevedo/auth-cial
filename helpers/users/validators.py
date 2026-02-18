@@ -1,30 +1,21 @@
 import re
 
+
 def validate_password(password: str):
-    """
-    Valida senha com regras:
-    1. mínimo 6 caracteres
-    2. máximo 128 caracteres
-    3. pelo menos 1 número
-    4. pelo menos 1 caractere especial
-    5. pelo menos 1 letra maiúscula
-    6. pelo menos 1 letra minúscula
-    """
-
     if len(password) < 6:
-        return False, "A senha deve ter no mínimo 6 caracteres."
+        return False, "The password must contain minimum of 6 characters."
     if len(password) > 128:
-        return False, "A senha deve ter no máximo 128 caracteres."
+        return False, "The password must contain maximum of 128 characters."
     if not re.search(r"[0-9]", password):
-        return False, "A senha deve conter pelo menos um número."
+        return False, "The password must contain a number."
     if not re.search(r"[A-Z]", password):
-        return False, "A senha deve conter pelo menos uma letra maiúscula."
+        return False, "The password must contain a upper case character."
     if not re.search(r"[a-z]", password):
-        return False, "A senha deve conter pelo menos uma letra minúscula."
+        return False, "The password must contain a lower case character."
     if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=/\\\[\];']", password):
-        return False, "A senha deve conter pelo menos um caractere especial."
+        return False, "The password must contain a special character."
 
-    return True, "OK"
+    return True, "Password created succesfully"
 
 
 def validate_email_domain(email: str):
@@ -34,6 +25,6 @@ def validate_email_domain(email: str):
     ]
 
     if any(email.endswith(domain) for domain in allowed_domains):
-        return True, "OK"
+        return True, "E-mail created successfully"
 
-    return False, "O e-mail deve ser do domínio @gruposese.com ou @volkswagen.com.br."
+    return False, "The e-mail must be of @gruposese.com or @volkswagen.com.br domain."

@@ -1,118 +1,103 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
-from api.schemas import UserRegisterIn, UserOut, UserUpdateIn
+from typing import Optional
+from api.schemas import CreateUserSchema, UserResponseSchema, UpdateUserSchema, UserPaginationSchema
 from services.users import create_user_service, list_users_service, get_user_by_id_service, update_user_service, delete_user_service
 from database.database import get_db
 from helpers.log.logger import logger
-from typing import Optional
-from api.schemas import UsersPage, UserOut
+from helpers.http_exceptions import HTTP_Exceptions
 
 
 router = APIRouter()
 log = logger("users")
 
 
-router = APIRouter()
-
-@router.post("/register", summary="Registra um novo usuário", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def register_user(payload: UserRegisterIn, db: Session = Depends(get_db)):
+@router.post("/register", summary="Register a new user", response_model=UserResponseSchema, status_code=status.HTTP_201_CREATED)
+def register_user(payload: CreateUserSchema, db: Session = Depends(get_db)):
     try:
         user = create_user_service(
-            db=db,
-            name=payload.complete_name,
-            email=payload.email,
-            password=payload.password,
-            roles=payload.roles or "user",
+            db=db, name=payload.complete_name, email=payload.email, password=payload.password, 
+            role=payload.role or "user"
         )
         return user
 
     except ValueError as ve:
-        detail = str(ve)
-        if "cadastrado" in detail:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+        raise HTTP_Exceptions.http_409("User already exists:", ve)
+    
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Erro interno ao registrar usuário.")
+        raise HTTP_Exceptions.http_500("Interal error while creating user: ", e)
 
 
-@router.get("/list-users", summary="Lista usuários com paginação, busca e filtros", response_model=UsersPage,)
+@router.get("/list", summary="List all users - Pagination, search and filters included", response_model=UserPaginationSchema)
 def list_all_users(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1, description="Página atual (>=1)"),
-    page_size: int = Query(10, ge=1, le=100, description="Tamanho da página (1-100)"),
-    q: Optional[str] = Query(None, description="Busca por nome ou e-mail"),
-    status: Optional[bool] = Query(None, description="Filtra por status (true/false)"),
-    sort_by: str = Query("created_at", description="Campo para ordenação"),
-    order: str = Query("desc", pattern="^(?i)(asc|desc)$", description="Ordem asc|desc"),
-):
-    items, total = list_users_service(
-        db=db,
-        page=page,
-        page_size=page_size,
-        q=q,
-        status=status,
-        sort_by=sort_by,
-        order=order,
-    )
-    return {
-        "items": items,
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
-
-
-
-@router.get("/user/{user_id}", summary="Busca um usuário específico", response_model=UserOut)
-def list_specific_user(user_id: int, db: Session = Depends(get_db)):
-    user = get_user_by_id_service(db, user_id)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuário não encontrado"
-        )
-
-    return user
-
-
-@router.patch("/update/{user_id}", summary="Atualiza qualquer campo do usuário", response_model=UserOut)
-def update_user(
-    user_id: int,
-    payload: UserUpdateIn,
-    db: Session = Depends(get_db)
+    page: int = Query(1, ge=1, description="Actual page (>= 1)"),
+    page_size: int = Query(10, ge=1, le=100, description="Page size (1-100)"),
+    q: Optional[str] = Query(None, description="Search by name or e-mail"),
+    status: Optional[bool] = Query(None, description="Filter by status (true or false)"),
 ):
     try:
+        items, total = list_users_service(
+            db=db, page=page, page_size=page_size, q=q, 
+            status=status
+        )
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+
+    except Exception as e:
+        raise HTTP_Exceptions.http_500("Error while listing users: ", e)
+
+
+@router.get("/list/{user_id}", summary="List specific user", response_model=UserResponseSchema)
+def list_specific_user(user_id: int, db: Session = Depends(get_db)):
+    try:
+        user = get_user_by_id_service(
+            db, user_id
+        )
+        if not user:
+            raise HTTP_Exceptions.http_404("User not found.")
+        return user
+
+    except Exception as e:
+        raise HTTP_Exceptions.http_500("Error while finding specific user: ", e)
+
+
+@router.patch("/update/{user_id}", summary="Update any info of a user", response_model=UserResponseSchema)
+def update_user(user_id: int, payload: UpdateUserSchema, db: Session = Depends(get_db)):
+    try:
         user = update_user_service(
-            db=db,
-            user_id=user_id,
-            complete_name=payload.complete_name,
-            email=payload.email,
-            password=payload.password,
-            roles=payload.roles,
-            status=payload.status
+            db=db, user_id=user_id, complete_name=payload.complete_name, email=payload.email,
+            password=payload.password, role=payload.role, status=payload.status
         )
 
     except ValueError as ve:
         detail = str(ve)
         if "cadastrado" in detail:
-            raise HTTPException(status_code=409, detail=detail)
-        raise HTTPException(status_code=400, detail=detail)
+            raise HTTP_Exceptions.http_409("E-mail já cadastrado", ve)
+        raise HTTP_Exceptions.http_400("Erro ao atualizar usuário", ve)
+
+    except Exception as e:
+        raise HTTP_Exceptions.http_500("Erro interno ao atualizar usuário", e)
 
     if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        raise HTTP_Exceptions.http_404("Usuário não encontrado")
 
     return user
 
 
-@router.delete("/delete/{user_id}", summary="Desativa um usuário")
+@router.delete("/deactivate/{user_id}", summary="Deactivate user")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
-    deleted = delete_user_service(db, user_id)
-    
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuário não encontrado"
-        )
+    try:
+        deleted = delete_user_service(db, user_id)
 
-    return {"detail": "Usuário desativado com sucesso"}
+        if not deleted:
+            raise HTTP_Exceptions.http_404("User not found.")
+
+        return {"detail": "Successfully deactivated user."}
+
+    except Exception as e:
+        raise HTTP_Exceptions.http_500("Error while deactivating user: ", e)

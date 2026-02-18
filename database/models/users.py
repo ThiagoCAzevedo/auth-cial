@@ -12,7 +12,8 @@ class Users(Base):
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     status = Column(Boolean, default=True)
-    roles = Column(String(255), default="user")
+    role = Column(String(255), default="user")
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
