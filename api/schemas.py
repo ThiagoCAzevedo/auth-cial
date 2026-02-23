@@ -69,6 +69,14 @@ class ResendVerificationSchema(BaseModel):
     email: EmailStr
 
 
+class ForgotPasswordSchema(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordSchema(BaseModel):
+    token: str
+    new_password: str
+
 # -- API RETURN (RESPONSE) --
 class UserResponseSchema(BaseModel):
     id: int

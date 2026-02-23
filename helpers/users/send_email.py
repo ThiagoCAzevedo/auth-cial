@@ -29,3 +29,26 @@ def send_verification_email(to_email: str, token: str):
         server.starttls()
         server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
         server.send_message(msg)
+
+
+def send_password_reset_email(to_email: str, token: str):
+    reset_link = f"{os.getenv('APP_RESET_PASSWORD')}?token={token}"
+
+    body = f"""
+    Olá!
+
+    Recebemos um pedido para redefinir sua senha.
+    Clique no link abaixo para criar uma nova senha:
+    {reset_link}
+
+    Este link expira em 30 minutos.
+    """
+
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = "Redefinição de senha"
+    msg["From"] = os.getenv("SMTP_USER")
+    msg["To"] = to_email
+
+    with smtplib.SMTP(os.getenv("SMTP_HOST"), int(os.getenv("SMTP_PORT"))) as server:
+        server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
+        server.send_message(msg)

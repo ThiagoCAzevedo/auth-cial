@@ -63,3 +63,20 @@ class JWTHandler:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token.",
             )
+        
+    @staticmethod
+    def create_password_reset_token(data: dict):
+        to_encode = data.copy()
+        expire = datetime.now(timezone.utc) + timedelta(minutes=30)
+
+        to_encode.update({
+            "exp": expire,
+            "purpose": "password_reset",
+            "type": "reset"
+        })
+
+        return jwt.encode(
+            to_encode,
+            os.getenv("SECRET_KEY"),
+            os.getenv("ALGORITHM", "HS256")
+        )
