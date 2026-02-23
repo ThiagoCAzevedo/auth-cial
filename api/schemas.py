@@ -65,6 +65,10 @@ class RefreshTokenSchema(BaseModel):
     refresh_token: str
 
 
+class ResendVerificationSchema(BaseModel):
+    email: EmailStr
+
+
 # -- API RETURN (RESPONSE) --
 class UserResponseSchema(BaseModel):
     id: int

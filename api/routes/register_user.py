@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status, BackgroundTasks
 from sqlalchemy.orm import Session
-from api.schemas import CreateUserSchema, RegisterResponseSchema
+from api.schemas import CreateUserSchema, RegisterResponseSchema, ResendVerificationSchema
 from services.users import RegisterUsers
 from database.database import get_db
 from helpers.log.logger import logger
@@ -52,3 +52,24 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Successfully verified e-mail"}
+
+
+@router.post("/resend-verification")
+def resend_email_verification(payload: ResendVerificationSchema,db: Session = Depends(get_db)):
+    user = db.query(Users).filter(Users.email == payload.email).first()
+
+    if not user:
+        raise HTTP_Exceptions.http_404("User not found.")
+
+    if user.is_verified:
+        raise HTTP_Exceptions.http_400("User already verified.")
+
+    verification_token = JWTHandler.create_access_token({
+        "sub": str(user.id),
+        "email": user.email,
+        "purpose": "email_verification"
+    })
+
+    send_verification_email(user.email, verification_token)
+
+    return {"message": "Verification email re-sent successfully."}
