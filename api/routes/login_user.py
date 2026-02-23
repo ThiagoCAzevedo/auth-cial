@@ -39,6 +39,9 @@ def login_user(payload: LoginUserSchema, db: Session = Depends(get_db)):
             expires_days=refresh_days
         )
 
+        user.refresh_token = refresh_token
+        db.commit()
+
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
