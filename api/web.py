@@ -17,6 +17,7 @@ app.include_router(delete_router, prefix="/admin/delete", tags=["delete"])
 
 
 # -- DEFAULT ROUTES --
+app.include_router(default_routes, prefix="/user", tags=["default"])
 app.include_router(register_router, prefix="/user/register", tags=["register"])
 app.include_router(login_router, prefix="/user/login", tags=["login"])
 app.include_router(logout_router, prefix="/user/logout", tags=["logout"])

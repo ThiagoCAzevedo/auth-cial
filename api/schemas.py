@@ -61,6 +61,10 @@ class LoginUserSchema(BaseModel):
     remember_me: bool = False
 
 
+class RefreshTokenSchema(BaseModel):
+    refresh_token: str
+
+
 # -- API RETURN (RESPONSE) --
 class UserResponseSchema(BaseModel):
     id: int
