@@ -11,7 +11,7 @@ from helpers.security.jwt import JWTHandler
 router = APIRouter()
 
 
-@router.get("/me", response_model=UserResponseSchema)
+@router.get("/me", summary="Return logged user", response_model=UserResponseSchema)
 def get_me(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     user = db.query(Users).filter(Users.id == current_user["sub"]).first()
 
@@ -21,7 +21,7 @@ def get_me(current_user = Depends(get_current_user), db: Session = Depends(get_d
     return user
 
 
-@router.post("/refresh")
+@router.post("/refresh", summary="Refresh JWT access token")
 def refresh_token(payload: RefreshTokenSchema, db: Session = Depends(get_db)):
     decoded = JWTHandler.verify_token(payload.refresh_token)
 

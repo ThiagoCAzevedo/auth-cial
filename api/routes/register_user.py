@@ -36,7 +36,7 @@ def register_user(payload: CreateUserSchema, background: BackgroundTasks, db: Se
         raise HTTP_Exceptions.http_500("Internal error while creating user", e)
     
 
-@router.get("/verify-email")
+@router.get("/verify-email", summary="Verify user email")
 def verify_email(token: str, db: Session = Depends(get_db)):
     data = JWTHandler.verify_token(token)
 
@@ -54,7 +54,7 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     return {"message": "Successfully verified e-mail"}
 
 
-@router.post("/resend-verification")
+@router.post("/resend-verification", summary="Resend user verify email")
 def resend_email_verification(payload: ResendVerificationSchema,db: Session = Depends(get_db)):
     user = db.query(Users).filter(Users.email == payload.email).first()
 

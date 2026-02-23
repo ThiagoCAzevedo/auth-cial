@@ -10,7 +10,7 @@ router = APIRouter()
 log = logger("users")
 
 
-@router.post("")
+@router.post("", summary="Logout user")
 def logout_user(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)

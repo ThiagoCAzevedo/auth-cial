@@ -14,7 +14,7 @@ router = APIRouter()
 log = logger("users")
 
 
-@router.post("", response_model=LoginResponseSchema)
+@router.post("", summary="Login user", response_model=LoginResponseSchema)
 def login_user(payload: LoginUserSchema, db: Session = Depends(get_db)):
     try:
         user = db.query(Users).filter(Users.email == payload.email).first()
