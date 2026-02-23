@@ -5,11 +5,11 @@ from helpers.users import UserValidators
 
 # -- API CRUD --
 class CreateUserSchema(BaseModel):
-    first_name: str
-    last_name: str
-    email: EmailStr
-    password: str
-    confirm_password: str
+    first_name: str = Field(...)
+    last_name: str = Field(...)
+    email: EmailStr = Field(...)
+    password: str = Field(...)
+    confirm_password: str = Field(...)
 
     @field_validator("email")
     def validate_email_domain(cls, value):
@@ -33,11 +33,26 @@ class CreateUserSchema(BaseModel):
 
 
 class UpdateUserSchema(BaseModel):
-    complete_name: Optional[str] = Field(None, min_length=1, max_length=255)
+    first_name: Optional[str] = Field(None, min_length=3)
+    last_name: Optional[str] = Field(None, min_length=3)
     email: Optional[EmailStr] = None
-    password: Optional[str] = Field(None, min_length=6, max_length=128)
-    status: Optional[bool] = None
+    password: Optional[str] = Field(None)
     role: Optional[str] = None
+    status: Optional[bool] = None
+
+    @field_validator("email")
+    def validate_email_domain(cls, value):
+        ok, msg = UserValidators.validate_email_domain(value)
+        if not ok:
+            raise ValueError(msg)
+        return value
+
+    @field_validator("password")
+    def validate_password_strength(cls, value):
+        ok, msg = UserValidators.validate_password(value)
+        if not ok:
+            raise ValueError(msg)
+        return value
 
 
 class LoginUserSchema(BaseModel):
@@ -57,6 +72,11 @@ class UserResponseSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class RegisterResponseSchema(BaseModel):
+    message: str
+    user: UserResponseSchema
 
 
 class UserPaginationSchema(BaseModel):

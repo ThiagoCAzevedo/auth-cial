@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from database.models.users import Users
-from helpers.users import UserPassword, UserValidators
+from helpers.users import UserPassword
 from fastapi import HTTPException
+from helpers.security.jwt import JWTHandler
 
 class RegisterUsers:
 
@@ -13,13 +14,13 @@ class RegisterUsers:
         last_name: str, 
         email: str, 
         password: str, 
-    ) -> Users:
-
+    ):
         user = Users(
             first_name=first_name,
             last_name=last_name,
             email=email,
-            password=UserPassword.hash_password(password)
+            password=UserPassword.hash_password(password),
+            is_verified=False  # se você tiver esse campo
         )
 
         db.add(user)
@@ -30,4 +31,10 @@ class RegisterUsers:
             db.rollback()
             raise HTTPException(status_code=400, detail="E-mail already exists.")
         
-        return user
+        verification_token = JWTHandler.create_access_token({
+            "sub": str(user.id),
+            "email": user.email,
+            "purpose": "email_verification"
+        })
+
+        return user, verification_token

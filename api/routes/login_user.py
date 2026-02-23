@@ -24,6 +24,9 @@ def login_user(payload: LoginUserSchema, db: Session = Depends(get_db)):
 
         if not UserPassword.verify_password(payload.password, user.password):
             raise HTTP_Exceptions.http_401("Invalid password.")
+        
+        if not user.is_verified:
+            raise HTTP_Exceptions.http_401("Email not verified. Please check your inbox.")
 
         refresh_days = 30 if payload.remember_me else 1
 

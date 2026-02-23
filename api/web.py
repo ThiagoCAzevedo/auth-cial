@@ -11,8 +11,8 @@ app = FastAPI(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
-app.include_router(register_router, prefix="/users/register", tags=["register"])
-app.include_router(list_router, prefix="/users/list", tags=["list"])
-app.include_router(login_router, prefix="/login", tags=["login"])
-app.include_router(update_router, prefix="/update", tags=["update"])
-app.include_router(delete_router, prefix="/users", tags=["users"])
+app.include_router(register_router, prefix="/user/register", tags=["register"])
+app.include_router(list_router, prefix="/admin", tags=["list"])
+app.include_router(login_router, prefix="/user/login", tags=["login"])
+app.include_router(update_router, prefix="/admin/update", tags=["update"])
+# app.include_router(delete_router, prefix="/users", tags=["users"])
