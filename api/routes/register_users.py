@@ -15,9 +15,9 @@ log = logger("users")
 def register_user(payload: CreateUserSchema, db: Session = Depends(get_db)):
     try:
         return RegisterUsers.create_user(
-            db=db, first_name=payload.first_name, last_name=payload.last_name, email=payload.email, 
-            password=payload.password
-        )
+                db=db, first_name=payload.first_name, last_name=payload.last_name, email=payload.email, 
+                password=payload.password
+            )
     
     except Exception as e:
-        raise HTTP_Exceptions.http_500("Interal error while creating user", e)
+        raise HTTP_Exceptions.http_500("Internal error while creating user", e)

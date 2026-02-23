@@ -1,13 +1,35 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, model_validator, field_validator
 from typing import List, Optional
+from helpers.users import UserValidators
 
 
 # -- API CRUD --
 class CreateUserSchema(BaseModel):
-    first_name: str = Field(..., min_length=1, max_length=255)
-    last_name: str = Field(..., min_length=1, max_length=255)
+    first_name: str
+    last_name: str
     email: EmailStr
-    password: str = Field(..., min_length=6, max_length=128)
+    password: str
+    confirm_password: str
+
+    @field_validator("email")
+    def validate_email_domain(cls, value):
+        ok, msg = UserValidators.validate_email_domain(value)
+        if not ok:
+            raise ValueError(msg)
+        return value
+
+    @field_validator("password")
+    def validate_password_strength(cls, value):
+        ok, msg = UserValidators.validate_password(value)
+        if not ok:
+            raise ValueError(msg)
+        return value
+
+    @model_validator(mode="after")
+    def validate_passwords_match(self):
+        if self.password != self.confirm_password:
+            raise ValueError("Passwords do not match.")
+        return self
 
 
 class UpdateUserSchema(BaseModel):
