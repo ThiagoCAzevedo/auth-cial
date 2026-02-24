@@ -7,20 +7,21 @@ from helpers.security.jwt import JWTHandler
 from helpers.services.validators import UserValidators
 from helpers.services.user import UserService
 from services.update import UpdateUsers
+from helpers.security.dependencies import get_current_user
 
 
 router = APIRouter()
 
 
 @router.get("/me", summary="Return logged user", response_model=UserResponseSchema)
-def get_me(current_user = Depends(UserService.get_current_user()), db: Session = Depends(get_db)):
+def get_me(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     return UserService.get_user_by_id(db, current_user["sub"])
 
 
 @router.post("/refresh", summary="Refresh JWT access token")
 def refresh_token(payload: RefreshTokenSchema, db: Session = Depends(get_db)):
-    decoded = JWTHandler.verify_token(payload.refresh_token, "refresh")
-    user = UserService.get_user_by_id(db, decoded.get("sub")["sub"])
+    decoded = JWTHandler.verify_token(payload.refresh_token, token_type="refresh")
+    user = UserService.get_user_by_id(db, decoded.get("sub"))
 
     access_token = JWTHandler.create_access_token({
         "sub": str(user.id),
@@ -35,11 +36,15 @@ def refresh_token(payload: RefreshTokenSchema, db: Session = Depends(get_db)):
 
 
 @router.post("/change-password")
-def change_password(payload: ChangePasswordSchema, current_user = Depends(UserService.get_current_user()), db: Session = Depends(get_db)):
+def change_password(payload: ChangePasswordSchema, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     user = UserService.get_user_by_id(db, current_user["sub"])
     UserPassword.verify_password(payload.current_password, user.password)
     UserValidators.validate_password(payload.new_password)
-    UserPassword.hash_password(user, payload.new_password)
-    UpdateUsers.update_user(db, current_user, refresh_token=None)
+    UpdateUsers.update_user(
+        db,
+        current_user["sub"],
+        password=UserPassword.hash_password(payload.new_password),
+        refresh_token=None
+    )
 
     return {"message": "Password changed successfully"}

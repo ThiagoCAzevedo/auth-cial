@@ -11,7 +11,7 @@ from helpers.services.user import UserService
 router = APIRouter()
 
 
-@router.get("/list-all", summary="List all users - Pagination, search and filters included", response_model=UserPaginationSchema, dependencies=[Depends(UserService.ensure_is_admin())])
+@router.get("/list-all", summary="List all users - Pagination, search and filters included", response_model=UserPaginationSchema, dependencies=[Depends(UserService.ensure_is_admin)])
 def list_all_users(
     db: Session = Depends(get_db), page: int = Query(1, ge=1, description="Actual page (>= 1)"),
     page_size: int = Query(10, ge=1, le=100, description="Page size (1-100)"), q: Optional[str] = Query(None, description="Search by name or e-mail"),

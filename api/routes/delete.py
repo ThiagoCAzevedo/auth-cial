@@ -9,7 +9,7 @@ from helpers.services.user import UserService
 router = APIRouter()
 
 
-@router.delete("/{user_id}", summary="Permanently delete a user", dependencies=[Depends(UserService.ensure_is_admin())])
+@router.delete("/{user_id}", summary="Permanently delete a user", dependencies=[Depends(UserService.ensure_is_admin)])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     try:
         DeleteUsers.delete_user(db, user_id)

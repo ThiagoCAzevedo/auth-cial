@@ -18,7 +18,7 @@ class UserValidators:
         if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=/\\\[\];']", password):
             raise HTTP_Exceptions.http_400("The password must contain a special character.")
 
-        return True
+        # return True
 
     @staticmethod
     def validate_email_domain(email: str):
@@ -27,7 +27,5 @@ class UserValidators:
             "@volkswagen.com.br"
         ]
 
-        if any(email.endswith(domain) for domain in allowed_domains):
-            return True, "E-mail created successfully"
-
-        return False, "The e-mail must be of @gruposese.com or @volkswagen.com.br domain."
+        if not any(email.endswith(domain) for domain in allowed_domains):
+            raise HTTP_Exceptions.http_400("The e-mail must be of @gruposese.com or @volkswagen.com.br domain.")

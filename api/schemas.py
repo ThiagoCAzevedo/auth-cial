@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr, model_validator, field_validator
 from typing import List, Optional
-from helpers.users import UserValidators
+from helpers.services.validators import UserValidators
 
 
 # -- GENERAL SCHEMAS --
@@ -18,16 +18,12 @@ class CreateUserSchema(BaseModel):
 
     @field_validator("email")
     def validate_email_domain(cls, value):
-        ok, msg = UserValidators.validate_email_domain(value)
-        if not ok:
-            raise ValueError(msg)
+        UserValidators.validate_email_domain(value)
         return value
 
     @field_validator("password")
     def validate_password_strength(cls, value):
-        ok, msg = UserValidators.validate_password(value)
-        if not ok:
-            raise ValueError(msg)
+        UserValidators.validate_password(value)
         return value
 
     @model_validator(mode="after")
@@ -47,16 +43,12 @@ class UpdateUserSchema(BaseModel):
 
     @field_validator("email")
     def validate_email_domain(cls, value):
-        ok, msg = UserValidators.validate_email_domain(value)
-        if not ok:
-            raise ValueError(msg)
+        UserValidators.validate_email_domain(value)
         return value
 
     @field_validator("password")
     def validate_password_strength(cls, value):
-        ok, msg = UserValidators.validate_password(value)
-        if not ok:
-            raise ValueError(msg)
+        UserValidators.validate_password(value)
         return value
 
 

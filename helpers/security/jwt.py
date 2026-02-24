@@ -42,12 +42,15 @@ class JWTHandler:
         )
 
     @staticmethod
-    def verify_token(token: str, token_type: str = None) -> dict:
+    def verify_token(token: str, token_purpose: str = None, token_type: str = None) -> dict:
         try:
             decoded = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM", "HS256")])
             
-            if decoded.get("type") != token_type or decoded.get("purpose") != token_type:
-                raise HTTP_Exceptions.http_401(f"Invalid token type. Only {token_type} tokens are allowed.")
+            if token_type and decoded.get("type") != token_type:
+                raise HTTP_Exceptions.http_401(f"Invalid token type. Expected: {token_type}.")
+            
+            if token_purpose and decoded.get("purpose") != token_purpose:
+                raise HTTP_Exceptions.http_401("Invalid token purpose.")
             
             return decoded
 

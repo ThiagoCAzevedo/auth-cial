@@ -24,7 +24,7 @@ def register_user(payload: CreateUserSchema, background: BackgroundTasks, db: Se
             password=payload.password
         )
 
-        background.add_task(EmailService.send_verification_email(), user.email, verification_token)
+        background.add_task(EmailService.send_verification_email(user.email, verification_token))
 
         return {
             "message": "Successfully created user. Verify your e-mail.",
@@ -37,14 +37,14 @@ def register_user(payload: CreateUserSchema, background: BackgroundTasks, db: Se
 
 @router.get("/verify-email", summary="Verify user email")
 def verify_email(token: str, db: Session = Depends(get_db)):
-    data = JWTHandler.verify_token(token, "email_verification")
+    data = JWTHandler.verify_token(token, token_purpose="email_verification")
     UpdateUsers.update_user(db, data["sub"], is_verified=True)
     return {"message": "Successfully verified e-mail"}
 
 
 @router.post("/resend-verification", summary="Resend user verify email")
 def resend_email_verification(payload: EmailSchema,db: Session = Depends(get_db)):
-    user = UserService.get_user_by_email(db, payload.email)
+    user = UserService.get_user_by_email(db, payload.email, verify_user=True)
 
     verification_token = JWTHandler.create_access_token({
         "sub": str(user.id),

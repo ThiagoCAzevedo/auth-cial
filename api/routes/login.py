@@ -15,32 +15,29 @@ router = APIRouter()
 
 @router.post("", summary="Login user", response_model=LoginResponseSchema)
 def login_user(payload: LoginUserSchema, db: Session = Depends(get_db)):
-    try:
-        user = UserService.get_user_by_email(db, payload.email)
-        UserPassword.verify_password(payload.password, user.password)
+    user = UserService.get_user_by_email(db, payload.email)
+    UserPassword.verify_password(payload.password, user.password)
 
-        refresh_days = 30 if payload.remember_me else 1
-        access_token = JWTHandler.create_access_token(
-            {"sub": str(user.id), "email": user.email}
-        )
+    refresh_days = 30 if payload.remember_me else 1
+    access_token = JWTHandler.create_access_token(
+        {"sub": str(user.id), "email": user.email, "role": user.role}
+    )
 
-        refresh_token = JWTHandler.create_refresh_token(
-            {"sub": str(user.id), "email": user.email},
-            expires_days=refresh_days
-        )
+    refresh_token = JWTHandler.create_refresh_token(
+        {"sub": str(user.id), "email": user.email, "role": user.role},
+        expires_days=refresh_days
+    )
 
-        UpdateUsers.update_user(db, user.id, refresh_token=refresh_token)
+    UpdateUsers.update_user(db, user.id, refresh_token=refresh_token)
 
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "remember_me": payload.remember_me,
-            "token_type": "bearer",
-            "user":user
-        }
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "remember_me": payload.remember_me,
+        "token_type": "bearer",
+        "user":user
+    }
 
-    except Exception:
-        raise HTTP_Exceptions.http_500("Internal Server Error")
     
 
 @router.post("/forgot-password", summary="User forgot password")
@@ -64,7 +61,7 @@ def forgot_password(payload: EmailSchema, db: Session = Depends(get_db)):
 
 @router.post("/reset-password", summary="User reset password")
 def reset_password(payload: ResetPasswordSchema, db: Session = Depends(get_db)):
-    decoded = JWTHandler.verify_token(payload.token, "password_reset")
+    decoded = JWTHandler.verify_token(payload.token, token_purpose="password_reset")
     user = UserService.get_user_by_id(db, decoded.get("sub"))
 
     if user.reset_password_token != payload.token:
