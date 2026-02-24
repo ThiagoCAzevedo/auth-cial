@@ -1,4 +1,5 @@
 from passlib.hash import argon2
+from helpers.http_exceptions import HTTP_Exceptions
 
 
 class UserPassword:
@@ -8,4 +9,6 @@ class UserPassword:
 
     @staticmethod
     def verify_password(password: str, hashed: str) -> bool:
-        return argon2.verify(password, hashed)
+        password_verified = argon2.verify(password, hashed)
+        if not password_verified:
+            raise HTTP_Exceptions.http_401("Current password is incorrect")
