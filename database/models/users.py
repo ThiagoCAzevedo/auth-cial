@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, DateTime, Boolean
 from sqlalchemy.sql import func
-from database.database import Base
+from database.base import Base
 
 
 class Users(Base):
@@ -19,8 +19,6 @@ class Users(Base):
     refresh_token = Column(String(255), nullable=True)
 
     reset_password_token = Column(String(255), nullable=True)
-    # reset_password_expiration = Column(DateTime(timezone=True), nullable=True)
 
-    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
