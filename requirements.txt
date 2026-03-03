@@ -23,5 +23,4 @@ typing-inspection==0.4.2
 uvicorn==0.40.0
 PyJWT==2.11.0
 
-# para instalar corretamente, rodar:
 # pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org --cert false
