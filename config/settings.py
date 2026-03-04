@@ -4,8 +4,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # APP CONFIG
     APP_NAME: str
+    APP_URL: str    
     FILES_DRIVER: str
-    APP_URL: str
 
     APP_VERIFY_EMAIL: str
     APP_RESET_PASSWORD: str
@@ -16,7 +16,6 @@ class Settings(BaseSettings):
     MYSQL_USER: str
     MYSQL_PSWD: str
     MYSQL_DATABASE: str
-    TEST_MYSQL_URL: str
 
     # JWT
     SECRET_KEY: str
