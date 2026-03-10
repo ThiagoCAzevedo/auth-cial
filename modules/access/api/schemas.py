@@ -7,7 +7,6 @@ class EmailSchema(BaseModel):
     email: EmailStr
 
 
-
 class LoginUserSchema(BaseModel):
     email: EmailStr
     password: str
@@ -28,19 +27,6 @@ class ResetPasswordSchema(BaseModel):
     new_password: str
 
 
-class LoginResponseSchema(BaseModel):
-    access_token: str
-    refresh_token: str
-    remember_me: bool
-    token_type: str
-    user: dict
-
-
-class RefreshTokenResponseSchema(BaseModel):
-    access_token: str
-    token_type: str
-
-
 class UserResponseSchema(BaseModel):
     id: int
     first_name: str
@@ -48,6 +34,20 @@ class UserResponseSchema(BaseModel):
     email: EmailStr
     status: bool
     role: Optional[str]
+    is_verified: bool
 
     class Config:
         from_attributes = True
+
+
+class LoginResponseSchema(BaseModel):
+    access_token: str
+    refresh_token: str
+    remember_me: bool
+    token_type: str
+    user: UserResponseSchema
+
+
+class RefreshTokenResponseSchema(BaseModel):
+    access_token: str
+    token_type: str

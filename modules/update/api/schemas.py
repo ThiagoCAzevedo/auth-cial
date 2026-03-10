@@ -10,7 +10,8 @@ class UpdateUserSchema(BaseModel):
     email: Optional[EmailStr] = None
     password: Optional[str] = None
     role: Optional[str] = None
-    status: Optional[bool] = None
+    status: Optional[str] = None
+    is_verified: Optional[bool] = None
 
     @field_validator("email")
     def validate_email_domain(cls, value):
