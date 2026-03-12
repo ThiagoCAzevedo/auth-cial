@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -21,10 +21,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
 
-    class Config:
-        env_file = "config/.env"
-        extra = "forbid"
-        case_sensitive = True
-
-
+    model_config = SettingsConfigDict(
+        env_file=["config/.env", "config/.env.test"],
+        extra="forbid",
+        case_sensitive=True,
+    )
+    
 settings = Settings()
