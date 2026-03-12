@@ -1,21 +1,25 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from database.models.users import Users
-class UpdateUserService:
-    """Application service for updating users"""
+from common.logger import logger
 
-    @staticmethod
-    def execute(db: Session, user_id: int, **fields):
-        user = db.query(Users).filter(Users.id == user_id).first()
 
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+log = logger("update_service")
 
-        for field, value in fields.items():
-            if hasattr(user, field):
-                setattr(user, field, value)
 
-        db.commit()
-        db.refresh(user)
+def update_user(db: Session, user_id: int, **fields):
+    """Update the specified fields on a user record."""
+    user = db.query(Users).filter(Users.id == user_id).first()
 
-        return user
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    for field, value in fields.items():
+        if hasattr(user, field):
+            setattr(user, field, value)
+
+    db.commit()
+    db.refresh(user)
+
+    return user
+

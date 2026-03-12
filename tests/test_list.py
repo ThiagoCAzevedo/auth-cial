@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from modules.register.application.register_user_service import RegisterUserService
+from modules.register.application.register_user_service import register_user
 from modules.list.application.list_users_service import ListUsersService
 from database.models.users import Users
 import pytest
@@ -32,7 +32,7 @@ class TestListUsers:
 
         created_users = []
         for user_data in users_data:
-            user = RegisterUserService.execute(db=db_session, **user_data)
+            user = register_user(db=db_session, **user_data)
             created_users.append(user)
 
         # Test listing all users
@@ -55,7 +55,7 @@ class TestListUsers:
                 "email": f"user{i}@example.com",
                 "password": "Pass123!"
             }
-            RegisterUserService.execute(db=db_session, **user_data)
+            register_user(db=db_session, **user_data)
 
         # Test first page
         items, total = ListUsersService.list_users(db=db_session, page=1, page_size=2)
@@ -96,7 +96,7 @@ class TestListUsers:
         ]
 
         for user_data in users_data:
-            RegisterUserService.execute(db=db_session, **user_data)
+            register_user(db=db_session, **user_data)
 
         # Search by first name
         items, total = ListUsersService.list_users(db=db_session, q="John")
@@ -118,7 +118,7 @@ class TestListUsers:
     def test_status_filtering(self, db_session):
         """Test filtering by user status"""
         # Create users with different statuses
-        user1 = RegisterUserService.execute(
+        user1 = register_user(
             db=db_session,
             first_name="Active",
             last_name="User",
@@ -128,7 +128,7 @@ class TestListUsers:
         user1.status = True
         db_session.commit()
 
-        user2 = RegisterUserService.execute(
+        user2 = register_user(
             db=db_session,
             first_name="Inactive",
             last_name="User",
@@ -159,7 +159,7 @@ class TestListUsers:
             "password": "Pass123!"
         }
 
-        created_user = RegisterUserService.execute(db=db_session, **user_data)
+        created_user = register_user(db=db_session, **user_data)
 
         # Get user by ID
         retrieved_user = ListUsersService.get_user_by_id(db=db_session, user_id=created_user.id)
@@ -175,3 +175,4 @@ class TestListUsers:
             ListUsersService.get_user_by_id(db=db_session, user_id=99999)
 
         assert "User not found" in str(exc_info.value.detail)
+

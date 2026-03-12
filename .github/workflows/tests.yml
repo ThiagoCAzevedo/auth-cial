@@ -26,8 +26,7 @@ jobs:
     - name: Run tests and generate coverage report
       continue-on-error: true
       run: |
-        cp config/.env.test .env
-        pytest -v --tb=short --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
+        TESTING=true pytest -v --tb=short --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

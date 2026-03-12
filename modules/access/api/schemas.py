@@ -1,6 +1,5 @@
-from pydantic import BaseModel, EmailStr, field_validator, model_validator
-from typing import Optional
-from common.services.validators import UserValidators
+from pydantic import BaseModel, EmailStr, validator
+from common.services.validators import validate_email_domain, validate_password
 
 
 class EmailSchema(BaseModel):
@@ -18,13 +17,21 @@ class RefreshTokenSchema(BaseModel):
 
 
 class ChangePasswordSchema(BaseModel):
-    current_password: str
-    new_password: str
+    password: str
+
+    @validator("password")
+    def check_password(cls, value):
+        validate_password(value)
+        return value
 
 
 class ResetPasswordSchema(BaseModel):
-    token: str
-    new_password: str
+    password: str
+
+    @validator("password")
+    def check_password(cls, value):
+        validate_password(value)
+        return value
 
 
 class UserResponseSchema(BaseModel):
@@ -32,8 +39,8 @@ class UserResponseSchema(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
+    role: str
     status: bool
-    role: Optional[str]
     is_verified: bool
 
     class Config:
@@ -43,11 +50,14 @@ class UserResponseSchema(BaseModel):
 class LoginResponseSchema(BaseModel):
     access_token: str
     refresh_token: str
-    remember_me: bool
     token_type: str
+    remember_me: bool
     user: UserResponseSchema
+
+    class Config:
+        from_attributes = True
 
 
 class RefreshTokenResponseSchema(BaseModel):
-    access_token: str
-    token_type: str
+    refresh_token: str
+

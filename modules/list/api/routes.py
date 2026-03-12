@@ -4,8 +4,8 @@ from typing import Optional
 from modules.list.api.schemas import UserResponseSchema, UserPaginationSchema
 from modules.list.application.list_users_service import ListUsersService
 from database.session import get_db
-from common.exceptions import HTTPExceptions
-from common.services.user import UserService
+from common.exceptions import http_500
+from common.services.user import ensure_is_admin
 from common.logger import logger
 
 
@@ -19,7 +19,7 @@ router = APIRouter()
     "/list-all",
     summary="List all users - Pagination, search and filters included",
     response_model=UserPaginationSchema,
-    dependencies=[Depends(UserService.ensure_is_admin)]
+    dependencies=[Depends(ensure_is_admin)]
 )
 def list_all_users(
     db: Session = Depends(get_db),
@@ -41,14 +41,14 @@ def list_all_users(
 
     except Exception as e:
         log.error(f"Failed to list users: {str(e)}", exc_info=True)
-        raise HTTPExceptions.http_500("Erro ao listar usuários", e)
+        raise http_500("Erro ao listar usuários", e)
 
 
 @router.get(
     "/list/{user_id}",
     summary="List specific user",
     response_model=UserResponseSchema,
-    dependencies=[Depends(UserService.ensure_is_admin)]
+    dependencies=[Depends(ensure_is_admin)]
 )
 def list_specific_user(user_id: int, db: Session = Depends(get_db)):
     log.info(f"Fetching specific user: {user_id}")
@@ -59,4 +59,5 @@ def list_specific_user(user_id: int, db: Session = Depends(get_db)):
 
     except Exception as e:
         log.error(f"Failed to retrieve user {user_id}: {str(e)}", exc_info=True)
-        raise HTTPExceptions.http_500("Erro ao encontrar usuário específico", e)
+        raise http_500("Erro ao encontrar usuário específico", e)
+

@@ -1,30 +1,22 @@
-from pydantic import BaseModel, Field, EmailStr, model_validator, field_validator
-from typing import Optional
-from common.services.validators import UserValidators
+from pydantic import BaseModel, EmailStr, validator
+from common.services.validators import validate_email_domain, validate_password
 
 
 class CreateUserSchema(BaseModel):
-    first_name: str = Field(...)
-    last_name: str = Field(...)
-    email: EmailStr = Field(...)
-    password: str = Field(...)
-    confirm_password: str = Field(...)
+    first_name: str
+    last_name: str
+    email: EmailStr
+    password: str
 
-    @field_validator("email")
-    def validate_email_domain(cls, value):
-        UserValidators.validate_email_domain(value)
+    @validator("email")
+    def check_email(cls, value):
+        validate_email_domain(value)
         return value
 
-    @field_validator("password")
-    def validate_password_strength(cls, value):
-        UserValidators.validate_password(value)
+    @validator("password")
+    def check_password(cls, value):
+        validate_password(value)
         return value
-
-    @model_validator(mode="after")
-    def validate_passwords_match(self):
-        if self.password != self.confirm_password:
-            raise ValueError("Passwords do not match.")
-        return self
 
 
 class UserResponseSchema(BaseModel):
@@ -32,8 +24,9 @@ class UserResponseSchema(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
+    role: str
     status: bool
-    role: Optional[str]
+    is_verified: bool
 
     class Config:
         from_attributes = True
@@ -42,3 +35,7 @@ class UserResponseSchema(BaseModel):
 class RegisterResponseSchema(BaseModel):
     message: str
     user: UserResponseSchema
+
+    class Config:
+        from_attributes = True
+

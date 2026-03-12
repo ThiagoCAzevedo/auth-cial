@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from modules.register.application.register_user_service import RegisterUserService
-from modules.delete.application.delete_user_service import DeleteUserService
+from modules.register.application.register_user_service import register_user
+from modules.delete.application.delete_user_service import delete_user
 from database.models.users import Users
 import pytest
 
@@ -16,14 +16,14 @@ class TestDeleteUser:
             "password": "Pass123!"
         }
 
-        user = RegisterUserService.execute(db=db_session, **user_data)
+        user = register_user(db=db_session, **user_data)
 
         # Verify user exists
         db_user = db_session.query(Users).filter(Users.id == user.id).first()
         assert db_user is not None
 
         # Delete the user
-        result = DeleteUserService.execute(db=db_session, user_id=user.id)
+        result = delete_user(db=db_session, user_id=user.id)
         assert result == True
 
         # Verify user is deleted
@@ -33,7 +33,7 @@ class TestDeleteUser:
     def test_delete_nonexistent_user(self, db_session):
         """Test deleting a user that doesn't exist"""
         with pytest.raises(HTTPException) as exc_info:
-            DeleteUserService.execute(db=db_session, user_id=99999)
+            delete_user(db=db_session, user_id=99999)
 
         assert "User not found" in str(exc_info.value.detail)
 
@@ -47,11 +47,11 @@ class TestDeleteUser:
             "password": "Pass123!"
         }
 
-        user = RegisterUserService.execute(db=db_session, **user_data)
+        user = register_user(db=db_session, **user_data)
 
         # In a real scenario, you might have foreign key constraints
         # For this simple schema, deletion should work fine
-        result = DeleteUserService.execute(db=db_session, user_id=user.id)
+        result = delete_user(db=db_session, user_id=user.id)
         assert result == True
 
         # Verify deletion
@@ -68,7 +68,7 @@ class TestDeleteUser:
             "password": "Pass123!"
         }
 
-        user = RegisterUserService.execute(db=db_session, **user_data)
+        user = register_user(db=db_session, **user_data)
 
         # Get user info before deletion for audit purposes
         user_info = {
@@ -78,9 +78,10 @@ class TestDeleteUser:
         }
 
         # Delete the user
-        result = DeleteUserService.execute(db=db_session, user_id=user.id)
+        result = delete_user(db=db_session, user_id=user.id)
         assert result == True
 
         # In a real audit system, you would verify audit logs were created
         # For this test, we just ensure the operation completes
         assert result == True
+
