@@ -1,12 +1,20 @@
 from sqlalchemy.orm import Session
-from modules.delete.domain.delete_user import DeleteUserUseCase
+from fastapi import HTTPException
+from modules.delete.infrastructure.repositories import UserDeleteRepository
+from common.logger import logger
 
 
-class DeleteUserService:
-    """Application service for deleting users"""
+log = logger("delete_service")
 
-    @staticmethod
-    def execute(db: Session, user_id: int) -> bool:
-        """Execute user deletion"""
-        use_case = DeleteUserUseCase()
-        return use_case.delete_user(db, user_id)
+
+def delete_user(db: Session, user_id: int) -> bool:
+    """Delete a user via repository; raise if not found."""
+    log.debug(f"Deleting user: {user_id}")
+    try:
+        result = UserDeleteRepository().delete_user(db, user_id)
+        log.info(f"User deleted successfully: {user_id}")
+        return result
+    except Exception as e:
+        log.error(f"Failed to delete user {user_id}: {str(e)}")
+        raise HTTPException(status_code=404, detail="User not found.")
+

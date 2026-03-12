@@ -1,8 +1,8 @@
 from typing import Optional, Tuple, List
 from sqlalchemy.orm import Session
 from database.models.users import Users
-from common.exceptions import HTTPExceptions
-from common.services.user import UserService
+from common.exceptions import http_404
+from common.services.user import get_user_by_id
 from modules.list.infrastructure.repositories import UserRepository
 from common.logger import logger
 
@@ -39,6 +39,7 @@ class ListUsersUseCase:
         user = self.user_repository.get_user_by_id(db, user_id)
         if not user:
             log.warning(f"User not found: {user_id}")
-            raise HTTPExceptions.http_404("User not found.")
+            raise http_404("User not found.")
         log.debug(f"User found: {user_id} - {user.email}")
         return user
+

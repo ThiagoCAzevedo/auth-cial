@@ -1,26 +1,26 @@
-from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional
-from common.services.validators import UserValidators
-from modules.access.api.schemas import UserResponseSchema
+from pydantic import BaseModel, EmailStr, validator
+from common.services.validators import validate_email_domain, validate_password
 
 
 class UpdateUserSchema(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    email: Optional[EmailStr] = None
-    password: Optional[str] = None
-    role: Optional[str] = None
-    status: Optional[str] = None
-    is_verified: Optional[bool] = None
+    first_name: str | None = None
+    last_name: str | None = None
+    email: EmailStr | None = None
+    password: str | None = None
+    role: str | None = None
+    status: bool | None = None
+    is_verified: bool | None = None
+    refresh_token: str | None = None
 
-    @field_validator("email")
-    def validate_email_domain(cls, value):
+    @validator("email")
+    def check_email(cls, value):
         if value:
-            UserValidators.validate_email_domain(value)
+            validate_email_domain(value)
         return value
 
-    @field_validator("password")
-    def validate_password_strength(cls, value):
+    @validator("password")
+    def check_password(cls, value):
         if value:
-            UserValidators.validate_password(value)
+            validate_password(value)
         return value
+

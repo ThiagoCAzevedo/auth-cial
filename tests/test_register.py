@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
-from modules.register.application.register_user_service import RegisterUserService
+from modules.register.application.register_user_service import register_user
 from database.models.users import Users
 import pytest
 
@@ -15,7 +15,7 @@ class TestRegisterUserService:
             "password": "SecurePass123!"
         }
 
-        user = RegisterUserService.execute(
+        user = register_user(
             db=db_session,
             **user_data
         )
@@ -41,11 +41,11 @@ class TestRegisterUserService:
         }
 
         # Create first user
-        RegisterUserService.execute(db=db_session, **user_data)
+        register_user(db=db_session, **user_data)
 
         # Try to create duplicate
         with pytest.raises(HTTPException) as exc_info:
-            RegisterUserService.execute(db=db_session, **user_data)
+            register_user(db=db_session, **user_data)
 
         assert "E-mail already exists" in str(exc_info.value.detail)
 
@@ -53,7 +53,7 @@ class TestRegisterUserService:
         """Test user registration with invalid data"""
         # Test with empty email
         with pytest.raises(Exception):  # Should be caught by Pydantic validation
-            RegisterUserService.execute(
+            register_user(
                 db=db_session,
                 first_name="Test",
                 last_name="User",
@@ -63,14 +63,15 @@ class TestRegisterUserService:
 
     def test_password_hashing(self, db_session):
         """Test that passwords are properly hashed"""
-        from common.security.password import UserPassword
+        from common.security.password import hash_password, verify_password
 
         password = "MySecurePassword123!"
-        hashed = UserPassword.hash_password(password)
+        hashed = hash_password(password)
 
         assert hashed != password
-        assert UserPassword.verify_password(password, hashed)
+        assert verify_password(password, hashed)
 
         # Test wrong password fails
         with pytest.raises(HTTPException):
-            UserPassword.verify_password("WrongPassword", hashed)
+            verify_password("WrongPassword", hashed)
+

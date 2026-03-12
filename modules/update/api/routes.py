@@ -1,30 +1,26 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
-from modules.update.api.schemas import UpdateUserSchema, UserResponseSchema
-from modules.update.application.update_user_service import UpdateUserService
+from modules.update.application.update_user_service import update_user
 from database.session import get_db
-from common.exceptions import HTTPExceptions
-from common.services.user import UserService
+from common.exceptions import http_500
+from common.services.user import ensure_is_admin
 from common.logger import logger
 
+
 log = logger("update_api")
+
 
 router = APIRouter()
 
 
-@router.patch(
-    "/{user_id}",
-    summary="Update any info of a user",
-    response_model=UserResponseSchema,
-    dependencies=[Depends(UserService.ensure_is_admin)]
-)
-def update_user(user_id: int, payload: UpdateUserSchema, db: Session = Depends(get_db)):
-    log.info(f"Update request for user: {user_id} with fields: {list(payload.model_dump(exclude_none=True).keys())}")
+@router.put("/{user_id}", summary="Update a user", dependencies=[Depends(ensure_is_admin)])
+def update_user_route(user_id: int, payload: dict, db: Session = Depends(get_db)):
+    log.info(f"Update request for user: {user_id}")
     try:
-        user = UpdateUserService.execute(db=db, user_id=user_id, **payload.model_dump(exclude_none=True))
-        log.info(f"User updated successfully: {user_id} - {user.email}")
-        return user
+        updated = update_user(db, user_id, **payload)
+        log.info(f"User updated successfully: {user_id}")
+        return updated
     except Exception as e:
-        log.error(f"Failed to update user {user_id}: {str(e)}", exc_info=True)
-        raise HTTPExceptions.http_500("Erro ao atualizar usuário: ", e)
+        log.error(f"Error updating user {user_id}: {str(e)}", exc_info=True)
+        raise http_500("Erro ao atualizar usuário: ", e)
+

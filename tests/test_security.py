@@ -1,7 +1,9 @@
 from fastapi import HTTPException
-from common.security.password import UserPassword
-from common.security.jwt import JWTHandler
-from common.services.validators import UserValidators
+from common.security.password import hash_password, verify_password
+from common.security.jwt import (
+    create_access_token, create_refresh_token, verify_token, create_password_reset_token
+)
+from common.services.validators import validate_password, validate_email_domain
 import pytest
 
 
@@ -11,16 +13,16 @@ class TestPasswordSecurity:
         password = "MySecurePassword123!"
 
         # Hash password
-        hashed = UserPassword.hash_password(password)
+        hashed = hash_password(password)
         assert hashed != password
         assert isinstance(hashed, str)
 
         # Verify correct password
-        assert UserPassword.verify_password(password, hashed)
+        assert verify_password(password, hashed)
 
         # Verify wrong password fails
         with pytest.raises(HTTPException):
-            UserPassword.verify_password("WrongPassword", hashed)
+            verify_password("WrongPassword", hashed)
 
 
 class TestJWTHandler:
@@ -34,12 +36,12 @@ class TestJWTHandler:
         }
 
         # Create token
-        token = JWTHandler.create_access_token(payload)
+        token = create_access_token(payload)
         assert token is not None
         assert isinstance(token, str)
 
         # Verify token
-        decoded = JWTHandler.verify_token(token, token_type="access")
+        decoded = verify_token(token, token_type="access")
         assert decoded["sub"] == "123"
         assert decoded["email"] == "test@example.com"
         assert decoded["role"] == "user"
@@ -54,11 +56,11 @@ class TestJWTHandler:
         }
 
         # Create token
-        token = JWTHandler.create_refresh_token(payload)
+        token = create_refresh_token(payload)
         assert token is not None
 
         # Verify token
-        decoded = JWTHandler.verify_token(token, token_type="refresh")
+        decoded = verify_token(token, token_type="refresh")
         assert decoded["sub"] == "456"
         assert decoded["email"] == "refresh@example.com"
         assert decoded["type"] == "refresh"
@@ -68,38 +70,38 @@ class TestJWTHandler:
         payload = {"sub": "123", "email": "test@example.com"}
 
         # Create access token
-        access_token = JWTHandler.create_access_token(payload)
+        access_token = create_access_token(payload)
 
         # Try to verify as refresh token - should fail
         with pytest.raises(HTTPException):
-            JWTHandler.verify_token(access_token, token_type="refresh")
+            verify_token(access_token, token_type="refresh")
 
     def test_token_purpose_validation(self):
         """Test token purpose validation"""
         payload = {"sub": "123", "email": "test@example.com"}
 
         # Create password reset token
-        reset_token = JWTHandler.create_password_reset_token(payload)
+        reset_token = create_password_reset_token(payload)
 
         # Verify with correct purpose
-        decoded = JWTHandler.verify_token(reset_token, token_purpose="password_reset", token_type="reset")
+        decoded = verify_token(reset_token, token_purpose="password_reset", token_type="reset")
         assert decoded["purpose"] == "password_reset"
         assert decoded["type"] == "reset"
 
         # Try to verify with wrong purpose - should fail
         with pytest.raises(HTTPException):
-            JWTHandler.verify_token(reset_token, token_purpose="email_verification")
+            verify_token(reset_token, token_purpose="email_verification")
 
     def test_invalid_token_verification(self):
         """Test verification of invalid tokens"""
         # Test with completely invalid token
         with pytest.raises(HTTPException):
-            JWTHandler.verify_token("invalid.token.here")
+            verify_token("invalid.token.here")
 
         # Test with valid format but wrong signature
         fake_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.fake_signature"
         with pytest.raises(HTTPException):
-            JWTHandler.verify_token(fake_token)
+            verify_token(fake_token)
 
 
 class TestEmailValidation:
@@ -114,7 +116,7 @@ class TestEmailValidation:
 
         for email in valid_emails:
             # Should not raise exception
-            UserValidators.validate_email_domain(email)
+            validate_email_domain(email)
 
         # Invalid domains
         invalid_emails = [
@@ -127,5 +129,6 @@ class TestEmailValidation:
 
         for email in invalid_emails:
             with pytest.raises(HTTPException) as exc_info:
-                UserValidators.validate_email_domain(email)
+                validate_email_domain(email)
             assert "O e-mail deve ser do domínio" in str(exc_info.value.detail)
+
