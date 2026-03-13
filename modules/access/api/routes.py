@@ -4,7 +4,6 @@ from modules.access.api.schemas import (
     UserResponseSchema, LoginUserSchema, LoginResponseSchema,
     RefreshTokenSchema
 )
-# the update functionality has been moved to its own module
 from modules.update.application.update_user_service import update_user
 from database.session import get_db
 from common.exceptions import http_403
