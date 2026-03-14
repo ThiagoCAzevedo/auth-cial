@@ -14,8 +14,6 @@ sys.path.insert(0, str(project_root))
 
 @pytest.fixture
 def db_session():
-    """Banco isolado para cada teste (SQLite em memória)"""
-
     engine = create_engine("sqlite:///:memory:")
 
     Base.metadata.create_all(engine)
