@@ -11,7 +11,7 @@ log = logger("delete_api")
 
 
 router = APIRouter()
-
+ 
 
 @router.delete(
     "/{user_id}",
@@ -28,4 +28,3 @@ def delete_user_route(user_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         log.error(f"Failed to delete user {user_id}: {str(e)}", exc_info=True)
         raise http_500("Erro ao deletar usuário", e)
-

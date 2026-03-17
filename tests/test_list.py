@@ -7,8 +7,6 @@ import pytest
 
 class TestListUsers:
     def test_list_all_users(self, db_session):
-        """Test listing all users with pagination"""
-        # Create test users
         users_data = [
             {
                 "first_name": "User",
@@ -35,7 +33,6 @@ class TestListUsers:
             user = register_user(db=db_session, **user_data)
             created_users.append(user)
 
-        # Test listing all users
         items, total = ListUsersService.list_users(db=db_session)
 
         assert total == 3
@@ -46,8 +43,6 @@ class TestListUsers:
         assert "admin@example.com" in emails
 
     def test_pagination(self, db_session):
-        """Test pagination functionality"""
-        # Create multiple users
         for i in range(5):
             user_data = {
                 "first_name": f"User{i}",
@@ -57,23 +52,19 @@ class TestListUsers:
             }
             register_user(db=db_session, **user_data)
 
-        # Test first page
         items, total = ListUsersService.list_users(db=db_session, page=1, page_size=2)
         assert total == 5
         assert len(items) == 2
 
-        # Test second page
         items, total = ListUsersService.list_users(db=db_session, page=2, page_size=2)
         assert total == 5
         assert len(items) == 2
 
-        # Test last page
         items, total = ListUsersService.list_users(db=db_session, page=3, page_size=2)
         assert total == 5
         assert len(items) == 1
 
     def test_search_functionality(self, db_session):
-        """Test search by name and email"""
         users_data = [
             {
                 "first_name": "John",
@@ -98,26 +89,21 @@ class TestListUsers:
         for user_data in users_data:
             register_user(db=db_session, **user_data)
 
-        # Search by first name
         items, total = ListUsersService.list_users(db=db_session, q="John")
-        assert total == 2  # John Doe and Bob Johnson
+        assert total == 2
         assert len(items) == 2
 
-        # Search by last name
         items, total = ListUsersService.list_users(db=db_session, q="Smith")
         assert total == 1
         assert len(items) == 1
         assert items[0].email == "jane.smith@example.com"
 
-        # Search by email
         items, total = ListUsersService.list_users(db=db_session, q="john.doe")
         assert total == 1
         assert len(items) == 1
         assert items[0].email == "john.doe@example.com"
 
     def test_status_filtering(self, db_session):
-        """Test filtering by user status"""
-        # Create users with different statuses
         user1 = register_user(
             db=db_session,
             first_name="Active",
@@ -138,20 +124,17 @@ class TestListUsers:
         user2.status = False
         db_session.commit()
 
-        # Filter active users
         items, total = ListUsersService.list_users(db=db_session, status=True)
         assert total == 1
         assert len(items) == 1
         assert items[0].email == "active@example.com"
 
-        # Filter inactive users
         items, total = ListUsersService.list_users(db=db_session, status=False)
         assert total == 1
         assert len(items) == 1
         assert items[0].email == "inactive@example.com"
 
     def test_get_user_by_id(self, db_session):
-        """Test getting a specific user by ID"""
         user_data = {
             "first_name": "Specific",
             "last_name": "User",
@@ -161,7 +144,6 @@ class TestListUsers:
 
         created_user = register_user(db=db_session, **user_data)
 
-        # Get user by ID
         retrieved_user = ListUsersService.get_user_by_id(db=db_session, user_id=created_user.id)
 
         assert retrieved_user.id == created_user.id
@@ -169,8 +151,6 @@ class TestListUsers:
         assert retrieved_user.first_name == created_user.first_name
 
     def test_get_nonexistent_user(self, db_session):
-        """Test getting a user that doesn't exist"""
-
         with pytest.raises(HTTPException) as exc_info:
             ListUsersService.get_user_by_id(db=db_session, user_id=99999)
 
